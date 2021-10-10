@@ -1,0 +1,53 @@
+- topic: sens/thermostaat/kamerTine/temperature
+  payload: 21.6
+  expected: {measurement: "test_temp", fields: {value: 21.6}, tags: {room: 'kamerTine'}}
+- topic: sens/thermostaat/kamerTine/humidity
+  payload: 72
+  expected: {measurement: "test_humidity", fields: {value: 72}, tags: {room: 'kamerTine'}}
+- topic: stat/thermostaat/kamerTine/mode
+  payload: abc
+  expected: {measurement: "test_mode", fields: {value: 'abc'}, tags: {room: 'kamerTine'}}
+- topic: stat/thermostaat/kamerTine/target
+  payload: 19.5
+  expected: {measurement: "test_tempTarget", fields: {value: 19.5}, tags: {room: 'kamerTine'}}
+- topic: sig/gang/pir
+  payload: 19.5
+  expected: {measurement: "test_pir", fields: {value: 1}, tags: {room: 'gang'}}
+- topic: zigbee2mqtt/Door_02
+  payload: '{"battery":100,"battery_low":false,"contact":false,"linkquality":12,"tamper":false,"voltage":3200}'
+  # expected: [{'measurement': 'test_pir', 'fields': {'value': 1}, 'tags': {'room': 'Door_02'}},{'measurement': 'test_voltage', 'fields': {'value': 3200}, 'tags': {'sensor': 'Door_02'}}]
+  expected:
+    - {'measurement': 'test_pir', 'fields': {'value': 1}, 'tags': {'room': 'Door_02'}}
+    - {'measurement': 'test_voltage', 'fields': {'value': 3200}, 'tags': {'sensor': 'Door_02'}}
+- topic: zigbee2mqtt/PIR-01
+  payload: '{"battery":100,"battery_low":false,"linkquality":54,"occupancy":true,"tamper":false,"voltage":2900}'
+  expected:
+    - {'measurement': 'test_pir', 'fields': {'value': 1}, 'tags': {'room': 'PIR-01'}}
+    - {'measurement': 'test_voltage', 'fields': {'value': 2900}, 'tags': {'sensor': 'PIR-01'}}
+- topic: stat/pooltemp/batt_v
+  payload: 4.1
+  expected: {measurement: "test_voltage", fields: {value: 4100}, tags: {'sensor': 'zwembadtemp'}}
+- topic: sens/pooltemp/air
+  payload: 23.2
+  expected: {measurement: "test_temp", fields: {value: 23.2}, tags: {room: 'zwembad_air'}}
+- topic: stat/zwembad/cover
+  payload: open
+  expected: {measurement: test_poolcover, fields: {value: 'open'}, tags: {}}
+- topic: sens/thermostaat/badkamer/SENSOR
+  payload: '{"Time":"2021-10-07T21:45:29","AM2301":{"Temperature":20.1,"Humidity":69.6},"TempUnit":"C"}'
+  expected: 
+    - {measurement: "test_temp", fields: {value: 20.1}, tags: {room: 'badkamer'}}
+    - {measurement: "test_humidity", fields: {value: 69.6}, tags: {room: 'badkamer'}}
+- topic: stat/thermostaat/badkamer/target
+  payload: 21.5
+  expected: {measurement: "test_tempTarget", fields: {value: 21.5}, tags: {room: 'badkamer'}}
+- topic: stat/thermostaat/badkamer/RESULT
+  payload: '{"POWER":"ON"}'
+  expected: {measurement: "test_badkamer_droger", fields: {value: 1}, tags: {}}
+- topic: stat/thermostaat/badkamer/RESULT
+  payload: '{"POWER":"OFF"}'
+  expected: {measurement: "test_badkamer_droger", fields: {value: 0}, tags: {}}
+
+
+
+    

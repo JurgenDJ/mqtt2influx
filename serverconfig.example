@@ -1,0 +1,12 @@
+# Rename this file to serverconfig.yaml
+
+mqtt:
+  host: your-mqtt-host
+  port: 1883
+  user: username
+  password: password
+
+influx:
+  host: your-influx-host
+  port: 8086
+  database:  influx-db-name
