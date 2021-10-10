@@ -15,20 +15,20 @@ subscriptions:
   - stat/thermostaat/badkamer/RESULT
   - stat/pooltemp/batt_v
 
-  ##################################################
-  # Rules for processing incoming mqtt message
-  ##################################################
-  # format:
-  # - topic: regular expression for matching the incoming topic
-  #   measurement: influx measurement
-  #   fields: (mandatory)
-  #     value: 
-  #     other field:
-  #   tags: (optional)
-  #     my_tag:
-  #
-  # both fields and tags are described with python expressions
-  #
+##################################################
+# Rules for processing incoming mqtt message
+##################################################
+# format:
+# - topic: regular expression for matching the incoming topic
+#   measurement: influx measurement
+#   fields: (mandatory)
+#     value: 
+#     other field:
+#   tags: (optional)
+#     my_tag:
+#
+# both fields and tags are described with python expressions
+#
 rules:
   - topic: zigbee2mqtt/Door_[0-9]*
     measurement: test_pir
