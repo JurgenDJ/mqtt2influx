@@ -28,7 +28,8 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Create a mapping.yaml and servercong.yaml file in the directory (rename/copy the included .example files)
+Create a mapping.yaml and serverconfig.yaml file in the directory
+(rename/copy the included .example files)
 
 ### testing the configuration
 
@@ -37,6 +38,12 @@ It will read the tests.yaml file and process each test, and report on (un)succes
 
 ``` sh
 python test_logger.py
+```
+
+The mapping.yaml configuration file can be updated while the deamon is running. look at the the mqtt2influx.log file to see if an updated mapping.yaml was successfully loaded
+
+```sh
+tail -f mqtt2influx.log
 ```
 
 ## Running the deamon
@@ -51,13 +58,13 @@ nohup python mqtt2influx.py 2>/dev/null 1>/dev/null &
 ## Still TODO
 
 - make it possible to split up the configuration in more seperate files instead of one big one
-- setup GIT repository, including ignore file
 - add an optional condition expression, to decide if logging is necessary for a received message
 - create .sh file for starting the deamon, add bat file for starting the deamon
 - add paramter for the location (and level) of the logfile
 
 ### done
 
+- setup GIT repository, including ignore file
 - make example file for the serverconfig
 - create a requirements file
 - let mqtt2influx use the servierconfig credentials
