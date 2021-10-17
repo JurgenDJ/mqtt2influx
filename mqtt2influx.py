@@ -118,7 +118,7 @@ if __name__ == "__main__":
         if len(datapoints)==0:
             logger.debug(f"message received that did not match any regular expression. topic: {message.topic}")
         else:
-            logger.info(f"writing to influx ({len(datapoints)}) topic: {message.topic}")
+            logger.info(f"writing({len(datapoints)}) {message.topic}")
             success = False
             try:
                 success = globalInflux.write_points(datapoints)

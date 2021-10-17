@@ -4,7 +4,7 @@
 ## Installation
 
 Make sure Python 3.6 or above is installed on the system.
-installation is done by cloning the git repository, creating a virtual environment and installing the required package
+installation is done by cloning the git repository, creating a virtual environment and installing the required packages
 
 ### On Linux
 
@@ -51,8 +51,16 @@ tail -f mqtt2influx.log
 Activate the virtual environment and then start the deamon:
 
 ``` sh
+cd <yourfolder>
 source ./venv/bin/activate
 nohup python mqtt2influx.py 2>/dev/null 1>/dev/null &
+```
+
+Checking the logs, for any **warnings**, typically from errors in the configuration,or **errors**, a problem in the application:
+
+
+```sh
+egrep 'WARNING|ERROR' mqtt2influx.log
 ```
 
 ## Still TODO
