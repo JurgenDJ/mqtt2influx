@@ -58,7 +58,6 @@ nohup python mqtt2influx.py 2>/dev/null 1>/dev/null &
 
 Checking the logs, for any **warnings**, typically from errors in the configuration,or **errors**, a problem in the application:
 
-
 ```sh
 egrep 'WARNING|ERROR' mqtt2influx.log
 ```

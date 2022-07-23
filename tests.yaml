@@ -47,7 +47,9 @@
 - topic: stat/thermostaat/badkamer/RESULT
   payload: '{"POWER":"OFF"}'
   expected: {measurement: "test_badkamer_droger", fields: {value: 0}, tags: {}}
-
+- topic: sens/panel/boven/battery_perc
+  payload: 89
+  expected: {measurement: "batt_perc", fields: {value: 89}, tags: {'sensor': 'panel boven'}}
 
 
     
