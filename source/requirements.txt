@@ -1,0 +1,4 @@
+influxdb==5.3.1
+PyYAML==5.4.1
+simpleeval==0.9.12
+paho-mqtt==1.5.1

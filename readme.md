@@ -1,6 +1,38 @@
 
 # MQTT to Influx feeder
 
+## MOVE TO DOCKER CONTAINER
+
+motivation: easier to install, including the automatic starting after server reboot
+
+- split source code to seperate subdirectory
+- split config to seperate subdirectory
+- build dockerfile
+
+### building the image
+
+``` sh
+docker build -t mqtt2influx .
+```
+
+### checking the image
+
+``` sh
+docker run -it --rm mqtt2influx /bin/bash
+```
+
+### running the image
+
+use the **run_mqtt2influx.sh** script
+
+### checking the live output from the deamon
+
+``` sh
+docker attach --sig-proxy=false mqtt2influx
+```
+
+using the sig-proxy flag, you can exit from attached mode with **ctrl-c** without killing the entire process
+
 ## Installation
 
 Make sure Python 3.6 or above is installed on the system.

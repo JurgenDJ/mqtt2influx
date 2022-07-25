@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from logging.handlers import RotatingFileHandler
 import sys
 
@@ -10,6 +11,13 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 import yaml
 from message_processor import setRules, processMessage
+
+
+# source_path = os.path.realpath(os.path.dirname(__file__))
+source_path = Path(os.path.dirname(__file__))
+config_path = source_path.parent/'config'
+log_path = source_path.parent/'log'
+Path.mkdir(log_path, exist_ok=True)
 
 globalInflux: InfluxDBClient = None
 mqtt_subscribed_topics = []
@@ -23,7 +31,7 @@ def prepareLogger():
     global logger
     today = dt.datetime.today()
     # filename = f'{today.year}{today.month:02d}{today.day:02d}.log'
-    filename = 'mqtt2influx.log'
+    filename = log_path / 'mqtt2influx.log'
     filehandler = RotatingFileHandler(filename=filename, maxBytes=1000000, backupCount=10)
     filehandler.setFormatter(logging.Formatter("%(asctime)s: %(levelname)s - %(message)s"))
     filehandler.setLevel(logging.INFO)
@@ -86,7 +94,7 @@ def doSubscriptions(client: mqtt.Client, subscriptionlist: list, handler: Functi
 
 def loadConfig(client: mqtt.Client, handler: FunctionType)->bool:
     success=False
-    config = loadYaml(filename="mapping.yaml")
+    config = loadYaml(filename=config_path/"mapping.yaml")
     if config == {}:
         logger.critical("CONFIG LOADING ERROR")
         return False
@@ -130,12 +138,12 @@ if __name__ == "__main__":
             else:
                 logger.error(f'write to influx Failed datapoints: {datapoints}')
     
-    serverconfig = loadYaml(filename="serverconfig.yaml")
+    serverconfig = loadYaml(filename=config_path/"serverconfig.yaml")
     client = connectToMqqt(config=serverconfig["mqtt"])
 
     globalInflux = connectToInflux(influxconfig=serverconfig["influx"])
 
-    configFileTime = os.path.getmtime("mapping.yaml")
+    configFileTime = os.path.getmtime(config_path/"mapping.yaml")
     success = loadConfig(client, handler=handleMqttMessage)
     if not success:
         exit()
@@ -145,9 +153,9 @@ if __name__ == "__main__":
         client.loop()
 
         logger.debug('checking if mapping.yaml was updated')
-        if configFileTime < os.path.getmtime("mapping.yaml"):
+        if configFileTime < os.path.getmtime(config_path/"mapping.yaml"):
             success = loadConfig(client, handler=handleMqttMessage)
-            configFileTime = os.path.getmtime("mapping.yaml")
+            configFileTime = os.path.getmtime(config_path/"mapping.yaml")
             if success:
                 logger.info('successfully reloaded the updated mapping.yaml file')
             else:

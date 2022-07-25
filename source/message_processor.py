@@ -23,6 +23,8 @@ def parseAllfields(fieldlist:dict, se:SimpleEval, logger:logging.Logger)->dict:
             logger.warning(f'failed evaluating expression(Name not defined) {str(fieldlist[k])}')
         except SyntaxError:
             logger.warning(f'failed evaluating expression(Syntax Error) {str(fieldlist[k])}')
+        except Exception as e:
+            logger.warning('failed evaluating expression(other error)')
         else:
             output[k] = value
             logger.debug(f"evaluating expression Success {expression}")

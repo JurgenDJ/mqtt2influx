@@ -1,7 +1,14 @@
 import yaml
+import os
+from pathlib import Path
+
 
 # from message_handler_jinja import setRules, handleMessage
 from message_processor import setRules, processMessage
+
+source_path = Path(os.path.dirname(__file__))
+config_path = source_path.parent/'config'
+
 
 def loadYaml(filename:str)->dict:
     result = {}
@@ -14,13 +21,13 @@ def loadYaml(filename:str)->dict:
 
 
 if __name__ == "__main__":
-    config = loadYaml(filename="mapping.yaml")
+    config = loadYaml(filename=config_path / "mapping.yaml")
     if config=={}:
         print("CONFIG LOADING ERROR")
         exit
     # print(config)
     setRules(config['rules'])
-    testcases = loadYaml("tests.yaml")
+    testcases = loadYaml(config_path / "tests.yaml")
     # print(testcases)
     
     n=0
