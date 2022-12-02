@@ -50,6 +50,9 @@
 - topic: sens/panel/boven/battery_perc
   payload: 89
   expected: {measurement: "batt_perc", fields: {value: 89}, tags: {'sensor': 'panel boven'}}
-
-
-    
+- topic: zigbee2mqtt/temp_living
+  payload: '{"battery":78,"humidity":55.4,"linkquality":15,"temperature":21.73}'
+  expected: 
+    - {measurement: "temp", fields: {value: 21.73}, tags: {room: 'living'}}
+    - {measurement: "humidity", fields: {value: 55.4}, tags: {room: 'living'}}
+    - {measurement: "batt_perc", fields: {value: 78}, tags: {'sensor': 'temp_living'}}
