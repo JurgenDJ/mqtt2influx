@@ -2,6 +2,7 @@ import logging
 import os
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from time import sleep
 import sys
 
 import datetime as dt
@@ -34,7 +35,7 @@ def prepareLogger():
     filename = log_path / 'mqtt2influx.log'
     filehandler = RotatingFileHandler(filename=filename, maxBytes=1000000, backupCount=10)
     filehandler.setFormatter(logging.Formatter("%(asctime)s: %(levelname)s - %(message)s"))
-    filehandler.setLevel(logging.INFO)
+    filehandler.setLevel(logging.INFO)  # debug < info < warning < error < critical
     logger.addHandler(filehandler)
 
 def writeProcessId(filename:str):
@@ -54,10 +55,22 @@ def loadYaml(filename: str) -> dict:
             print(exc)
     return result
 
-def connectToMqqt(config:dict)->mqtt.Client:  
+def connectToMqqt(config:dict)->mqtt.Client:
+    global mqtt_subscribed_topics  
     global logger
-    logger.info("connecting to mqtt ...")
     client = mqtt.Client("mqtt2influx")
+    
+    def on_connect(cl, userdata, flags, rc):
+        logger.critical('MQTT SERVER CONNECTED')
+        mqtt_subscribed_topics.clear()  # flush cashed subscriptions
+        loadConfig(cl)  # making sure subscriptions are refreshed
+    
+    def on_disconnect(cl, userdata,rc=0):
+        logger.critical('MQTT SERVER DISCONNECTED')
+
+    logger.info("connecting to mqtt ...")
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
     client.username_pw_set(username=config['user'], password=config['password'])
     returnCode = client.connect(config['host'], port=config['port'], keepalive=60, bind_address="")
     logger.info(f"mqtt connection return code: {returnCode}")
@@ -74,7 +87,7 @@ def connectToInflux(influxconfig:dict) -> InfluxDBClient:
 
 def doSubscriptions(client: mqtt.Client, subscriptionlist: list, handler: FunctionType):
     global mqtt_subscribed_topics
-    logger.info(f"doing mqtt subscriptions ({len(subscriptionlist)})")
+    logger.info(f"doing mqtt subscriptions ({len(subscriptionlist)}), chached ({len(mqtt_subscribed_topics)})")
     k = len(mqtt_subscribed_topics)
     
     # remove any unnecessary subscriptions
@@ -82,17 +95,20 @@ def doSubscriptions(client: mqtt.Client, subscriptionlist: list, handler: Functi
         k-=1
         if not mqtt_subscribed_topics[k] in subscriptionlist:
             client.unsubscribe(mqtt_subscribed_topics[k])
+            logger.debug(f"> unsubscribe from ({mqtt_subscribed_topics[k]})")
             del mqtt_subscribed_topics[k]
     
     # add any new subscriptions
     for subscription in subscriptionlist:
         if subscription not in mqtt_subscribed_topics:
             client.subscribe(subscription)
+            logger.debug(f"> subscribe to ({subscription})")
             mqtt_subscribed_topics.append(subscription)
 
     client.on_message = handler
 
-def loadConfig(client: mqtt.Client, handler: FunctionType)->bool:
+def loadConfig(client: mqtt.Client)->bool:
+    global logger
     success=False
     config = loadYaml(filename=config_path/"mapping.yaml")
     if config == {}:
@@ -108,8 +124,28 @@ def loadConfig(client: mqtt.Client, handler: FunctionType)->bool:
         return False
 
     setRules(config['rules'])
-    doSubscriptions(client, config['subscriptions'], handler=handler)
+    doSubscriptions(client, config['subscriptions'], handler=handleMqttMessage)
     return True
+
+def handleMqttMessage(client: mqtt.Client, userdata: str, message: mqtt.MQTTMessage):
+    global logger
+    logger.debug(f"mqtt received topic: {message.topic}, payload: {message.payload}")
+    datapoints = processMessage(message.topic, message.payload, logger=logger)
+    if len(datapoints)==0:
+        logger.debug(f"message received that did not match any regular expression. topic: {message.topic}")
+    else:
+        logger.info(f"writing({len(datapoints)}) {message.topic}")
+        success = False
+        try:
+            success = globalInflux.write_points(datapoints)
+        except InfluxDBClientError as e:
+            
+            logger.error(f"Influx Error {e}")
+        if success:
+            logger.debug('write to influx Success')
+        else:
+            logger.error(f'write to influx Failed datapoints: {datapoints}')
+
 
 if __name__ == "__main__":
     prepareLogger()
@@ -120,41 +156,24 @@ if __name__ == "__main__":
         logger.critical("Python version 3 required")
         exit()
 
-    def handleMqttMessage(client: mqtt.Client, userdata: str, message: mqtt.MQTTMessage):
-        logger.debug(f"mqtt received topic: {message.topic}, payload: {message.payload}")
-        datapoints = processMessage(message.topic, message.payload, logger=logger)
-        if len(datapoints)==0:
-            logger.debug(f"message received that did not match any regular expression. topic: {message.topic}")
-        else:
-            logger.info(f"writing({len(datapoints)}) {message.topic}")
-            success = False
-            try:
-                success = globalInflux.write_points(datapoints)
-            except InfluxDBClientError as e:
-                
-                logger.error(f"Influx Error {e}")
-            if success:
-                logger.debug('write to influx Success')
-            else:
-                logger.error(f'write to influx Failed datapoints: {datapoints}')
-    
     serverconfig = loadYaml(filename=config_path/"serverconfig.yaml")
     client = connectToMqqt(config=serverconfig["mqtt"])
 
     globalInflux = connectToInflux(influxconfig=serverconfig["influx"])
 
     configFileTime = os.path.getmtime(config_path/"mapping.yaml")
-    success = loadConfig(client, handler=handleMqttMessage)
+    success = loadConfig(client)
     if not success:
         exit()
 
     logger.info("STARTING DEAMON LOOP")
+    client.loop_start()  # starts the loop in seperate thread and takes care of reconnects if necessary
     while True:
-        client.loop()
-
+        # client.loop() # replaced by loop_start in seperate thread, also dealing with reconnects.
+        sleep(3)
         logger.debug('checking if mapping.yaml was updated')
         if configFileTime < os.path.getmtime(config_path/"mapping.yaml"):
-            success = loadConfig(client, handler=handleMqttMessage)
+            success = loadConfig(client)
             configFileTime = os.path.getmtime(config_path/"mapping.yaml")
             if success:
                 logger.info('successfully reloaded the updated mapping.yaml file')

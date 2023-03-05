@@ -14,6 +14,7 @@ motivation: easier to install, including the automatic starting after server reb
 ``` sh
 docker build -t mqtt2influx .
 ```
+or use the script **rebuild_image.sh**
 
 ### checking the image
 
@@ -32,6 +33,17 @@ docker attach --sig-proxy=false mqtt2influx
 ```
 
 using the sig-proxy flag, you can exit from attached mode with **ctrl-c** without killing the entire process
+
+or go in the docker container to check the logs:
+``` sh
+docker exec -it mqtt2influx sh
+
+cd /app/log
+more mqtt2influx.log
+
+exit
+```
+
 
 ## Installation
 
